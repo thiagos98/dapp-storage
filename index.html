@@ -52,68 +52,64 @@
   <script>
     let currentAccount = null;
     let web3;
-    let contractAddress = "0xC96ffDfcb457028A58d39E4AA53a1F58d07b7B65";
-    let abi = [
-      {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_cidIpfs",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_fileName",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_fileType",
-            "type": "string"
-          }
-        ],
-        "name": "storeData",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_cid",
-            "type": "string"
-          }
-        ],
-        "name": "getData",
-        "outputs": [
-          {
-            "components": [
-              {
-                "internalType": "string",
-                "name": "fileName",
-                "type": "string"
-              },
-              {
-                "internalType": "string",
-                "name": "fileType",
-                "type": "string"
-              }
-            ],
-            "internalType": "struct SlowStorage.Data",
-            "name": "",
-            "type": "tuple"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ]
-    const node = async () => {
-      const instace = await window.IpfsCore.create();
-      return instace;
-    }
-    
+    let contractAddress = "0x3FA33271926AAd55bdC35Ec51671991D87ce8f47";
+        let abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_cid",
+				"type": "string"
+			}
+		],
+		"name": "getData",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "fileName",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "fileType",
+						"type": "string"
+					}
+				],
+				"internalType": "struct SlowStorage.Data",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_cidIpfs",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fileName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_fileType",
+				"type": "string"
+			}
+		],
+		"name": "storeData",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+]
+
     function handleAccountsChanged(accounts) {
         console.log('Calling Handle Changed');
 
@@ -158,22 +154,58 @@
         return false
         }
     }
+    
     async function uploadFile() {
-          const input = document.querySelector('input');
-          const cid = await node.add(input.files[0]);
+      let opts = {
+        repo: 'ipfs-testing321',
+        config:{
+          bootstrap:[
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+            "/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic",
+            "/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6",
+            "/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS",
+            "/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN"
+          ]
+        }
+      }
+      const node = await window.IpfsCore.create(opts);
+      const input = document.querySelector('input');
+      const cid = await node.add(input.files[0]);
 
-          let contract = new web3.eth.Contract(abi, contractAddress);
-          await contract.methods.storeData(cid.path, input.files[0].name, input.files[0].type).send({ from: currentAccount });
+      let contract = new web3.eth.Contract(abi, contractAddress);
+      await contract.methods.storeData(cid.path, input.files[0].name, input.files[0].type).send({ from: currentAccount });
 
-          $('#showCID').html(cid.path);
+      $('#showCID').html(cid.path);
+      await node.stop();
     }
 
     async function showFile() {
+      let opts = {
+        repo: 'ipfs-testing321',
+        config:{
+          bootstrap:[
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmZa1sAxajnQjVM8WjWXoMbmPd7NsWhfKsPkErzpm9wGkp",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+            "/dns4/node0.preload.ipfs.io/tcp/443/wss/p2p/QmZMxNdpMkewiVZLMRxaNxUeZpDUb34pWjZ1kZvsd16Zic",
+            "/dns4/node1.preload.ipfs.io/tcp/443/wss/p2p/Qmbut9Ywz9YEDrz8ySBSgWyJk41Uvm2QJPhwDJzJyGFsD6",
+            "/dns4/node2.preload.ipfs.io/tcp/443/wss/p2p/QmV7gnbW5VTcJ3oyM2Xk1rdFBJ3kTkvxc87UFGsun29STS",
+            "/dns4/node3.preload.ipfs.io/tcp/443/wss/p2p/QmY7JB6MQXhxHvq7dBDh4HpbH29v4yE9JRadAVpndvzySN"
+          ]
+        }
+      }
+      const node = await window.IpfsCore.create(opts);
       
       let cidValue = $('#cid').val();
       let contract = new web3.eth.Contract(abi, contractAddress);
       let cids = await contract.methods.getData(cidValue).call();
-      console.log(cids);
+      
 
       const stream = await node.cat(cidValue)
       let data = ''
@@ -182,7 +214,8 @@
         // chunks of data are returned as a Buffer, convert it back to a string
         data += chunk.toString()
       }
-      $('#showCID').html(data);
+      $('#showFile').html(data);
+      await node.stop();
     }
 
     
