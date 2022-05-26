@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/3.0.0-rc.5/web3.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ipfs-core/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ipfs-core/dist/index.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+  <title>Dapp Text Files Storage</title>
+</head>
+
+<body>
+  <header class="header">
+    <h1 class="header-titulo">Dapp Text Files Storage</h1>
+    <!--         
+        <nav class="header-nav">
+            <a class="header-nav-item">Cadastro</a>
+            <a class="header-nav-item">Senhas</a>
+        </nav>
+        -->
+  </header>
+
+  <main class="conteudo-principal">
+    <div class="enable-metamask">
+      <button type="submit" class="botao" id="enableMetamask">
+        Conectar a Metamask
+      </button>
+    </div>
+
+    <div>
+      <input type="file" name="uploadFile" id="uploadFile">
+      <button type="submit" class="botao" id="storeData">
+        Upload
+      </button>
+
+      Aqui esta o identificador unico do seu arquivo <span id="showCID"></span>
+    </div>
+    <hr>
+    <div>
+      <h2>Buscar CID</h2>
+      <input type="text" name="cid" id="cid">
+      <button type="submit" class="botao" id="buscarCid">Buscar CID</button>
+      <span id="showFile"></span>
+    </div>
+  </main>
+  <script>
+    let currentAccount = null;
+    let web3;
+    let contractAddress = "0xC96ffDfcb457028A58d39E4AA53a1F58d07b7B65";
+    let abi = [
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_cidIpfs",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_fileName",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_fileType",
+            "type": "string"
+          }
+        ],
+        "name": "storeData",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "string",
+            "name": "_cid",
+            "type": "string"
+          }
+        ],
+        "name": "getData",
+        "outputs": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "fileName",
+                "type": "string"
+              },
+              {
+                "internalType": "string",
+                "name": "fileType",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct SlowStorage.Data",
+            "name": "",
+            "type": "tuple"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+    const node = async () => {
+      const instace = await window.IpfsCore.create();
+      return instace;
+    }
+    
+    function handleAccountsChanged(accounts) {
+        console.log('Calling Handle Changed');
+
+        if (accounts.length === 0) {
+        console.log('Please connect to metamask');
+        $('#enableMetamask').html('Conectar ao metamask');
+        } else if (accounts[0] !== currentAccount) {
+        currentAccount = accounts[0];
+        $('#enableMetamask').html(currentAccount);
+        $('status').html('');
+
+        if (currentAccount != null) {
+            $('#enableMetamask').html(currentAccount).remove('btn-primary');
+            $('#enableMetamask').attr('disabled', true);
+        }
+        }
+        console.log('Endereco da conta corrente = ' + currentAccount);
+    }
+
+    function connect() {
+        console.log('Calling Connect()');
+
+        ethereum
+        .request({
+            method: 'eth_requestAccounts'
+        })
+        .then(handleAccountsChanged)
+        .catch((err) => {
+            if (err.code === 4001) {
+            console.log('Please connect to metamask');
+            $('#status').html('Você recusou conectar ao metamask')
+            } else {
+            console.log(err);
+            }
+        });
+    }
+
+    function detectMetamask() {
+        if (typeof window.ethereum !== 'undefined') {
+        return true;
+        } else {
+        return false
+        }
+    }
+    async function uploadFile() {
+          const input = document.querySelector('input');
+          const cid = await node.add(input.files[0]);
+
+          let contract = new web3.eth.Contract(abi, contractAddress);
+          await contract.methods.storeData(cid.path, input.files[0].name, input.files[0].type).send({ from: currentAccount });
+
+          $('#showCID').html(cid.path);
+    }
+
+    async function showFile() {
+      
+      let cidValue = $('#cid').val();
+      let contract = new web3.eth.Contract(abi, contractAddress);
+      let cids = await contract.methods.getData(cidValue).call();
+      console.log(cids);
+
+      const stream = await node.cat(cidValue)
+      let data = ''
+
+      for await (const chunk of stream) {
+        // chunks of data are returned as a Buffer, convert it back to a string
+        data += chunk.toString()
+      }
+      $('#showCID').html(data);
+    }
+
+    
+    $(document).ready(function () {
+
+        m = detectMetamask();
+        if (m) {
+        $('#metaicon').removeClass('meta-gray');
+        $('#metaicon').addClass('meta-normal');
+        $('#enableMetamask').attr('disabled', false);
+
+        web3 = new Web3(window.ethereum);
+        } else {
+        $('#metaicon').removeClass('meta-normal');
+        $('#metaicon').addClass('meta-gray');
+        $('#enableMetamask').attr('disabled', true);
+        web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
+        }
+    });
+
+    $('#enableMetamask').click(function () {
+      connect();
+    });
+    $('#storeData').click(function () {
+      uploadFile();
+    });
+    $('#buscarCid').click(function () {
+      showFile();
+    });
+  </script>
+
+</body>
+
+</html>
