@@ -33,20 +33,24 @@
       </button>
     </div>
 
-    <div>
-      <input type="file" name="uploadFile" id="uploadFile">
+    <div class="upload-arquivos">
+      <input class="upload botao" type="file" name="uploadFile" id="uploadFile">
       <button type="submit" class="botao" id="storeData">
         Upload
       </button>
 
-      Aqui esta o identificador unico do seu arquivo <span id="showCID"></span>
+      <p > Aqui esta o identificador unico do seu arquivo <span id="showCID" class="cid"></span></p>
     </div>
     <hr>
-    <div>
-      <h2>Buscar CID</h2>
-      <input type="text" name="cid" id="cid">
-      <button type="submit" class="botao" id="buscarCid">Buscar CID</button>
-      <span id="showFile"></span>
+    <div class="buscar-arquivo">
+      <div class="exibir-resultados">
+        <h2>Buscar CID</h2>
+        <input class="input" type="text" name="cid" id="cid">
+        <button type="submit" class="botao" id="buscarCid">Buscar CID</button>
+        File Name: <span class="result-list" id="fileName"></span> <br>
+        File Type: <span class="result-list" id="fileType"></span> <br>
+        Content: <span class="result-list" id="showFile"></span><br>
+      </div>
     </div>
   </main>
   <script>
@@ -209,11 +213,15 @@
 
       const stream = await node.cat(cidValue)
       let data = ''
+      console.log(cids);
 
       for await (const chunk of stream) {
         // chunks of data are returned as a Buffer, convert it back to a string
         data += chunk.toString()
       }
+
+      $('#fileName').html(cids.fileName);
+      $('#fileType').html(cids.fileType);
       $('#showFile').html(data);
       await node.stop();
     }
