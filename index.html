@@ -220,11 +220,23 @@
         data += chunk.toString()
       }
 
+      const blob = new Blob([data], { type: cids.fileType });
+
+      if (blob) {
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = cids.fileName;
+        link.click();
+      }
+      
+
       $('#fileName').html(cids.fileName);
       $('#fileType').html(cids.fileType);
       $('#showFile').html(data);
       await node.stop();
     }
+
+
 
     
     $(document).ready(function () {
