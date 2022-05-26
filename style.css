@@ -36,9 +36,11 @@ body {
 
     color: #FFFFFF;
 }
-
+.btn-metamask {
+    margin-top: 3rem;
+}
 .enable-metamask {
-    padding-top: 36px;
+    
     display: block;
     margin: 0 auto;
 }
@@ -110,7 +112,7 @@ body {
     line-height: 24px;
     display: flex;
     align-items: center;
-
+    
     color: #000000;
     margin-bottom: 24px;
 }
@@ -150,7 +152,7 @@ body {
     font-weight: 400;
     font-size: 12px;
     line-height: 24px;
-
+    margin-top: 2rem;
     color: #000000;
 }
 
@@ -161,4 +163,14 @@ body {
     font-family: 'Righteous';
     font-style: normal;
     border: 1px solid #000000;
+}
+
+.texto {
+    font-family: 'Righteous';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 24px;
+
+    color: #000000;
 }

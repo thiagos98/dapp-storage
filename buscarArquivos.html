@@ -8,8 +8,8 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ipfs-core/dist/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ipfs-core/dist/index.min.js"></script>
-  <!-- JavaScript Bundle with Popper -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+    integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
   <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -35,19 +35,16 @@
       </button>
     </div>
 
-    <div class="upload-arquivos">
-      <input class="upload botao" type="file" name="uploadFile" id="uploadFile">
-      <button type="submit" class="btn btn-primary btn-metamask" id="storeData">
-        Upload
-      </button>
-
-      <div class="alert alert-dark cid" role="alert">
-        Aqui esta o identificador unico do seu arquivo: <span id="showCID" class="cid"></span>
+    <div class="buscar-arquivo">
+      <div class="exibir-resultados">
+        <h2>Buscar CID</h2>
+        <input class="input" type="text" name="cid" id="cid">
+        <button type="submit" class="btn btn-primary" id="buscarCid">Buscar CID</button>
+        File Name: <span class="result-list" id="fileName"></span> <br>
+        File Type: <span class="result-list" id="fileType"></span> <br>
+        Content: <span class="result-list" id="showFile"></span><br>
       </div>
-
-      <!-- <p class="texto"> Aqui esta o identificador unico do seu arquivo: <span id="showCID" class="cid"></span></p> -->
     </div>
-
   </main>
   <script src="./abi.js"></script>
   <script src="./contractAddr.js"></script>
@@ -56,7 +53,7 @@
     let currentAccount = null;
     let web3;
 
-    async function uploadFile() {
+    async function showFile() {
       let opts = {
         repo: 'ipfs-testing321',
         config: {
@@ -74,16 +71,39 @@
         }
       }
       const node = await window.IpfsCore.create(opts);
-      const input = document.querySelector('input');
-      const cid = await node.add(input.files[0]);
 
+      let cidValue = $('#cid').val();
       let contract = new web3.eth.Contract(abi, contractAddress);
-      let retorno = await contract.methods.storeData(cid.path, input.files[0].name, input.files[0].type).send({ from: currentAccount });
+      let cids = await contract.methods.getData(cidValue).call();
 
-      console.log(retorno);
-      $('#showCID').html(cid.path);
+
+      const stream = await node.cat(cidValue)
+      let data = ''
+      console.log(cids);
+
+      for await (const chunk of stream) {
+        // chunks of data are returned as a Buffer, convert it back to a string
+        data += chunk.toString()
+      }
+
+      const blob = new Blob([data], { type: cids.fileType });
+
+      if (blob) {
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = cids.fileName;
+        link.click();
+      }
+
+
+      $('#fileName').html(cids.fileName);
+      $('#fileType').html(cids.fileType);
+      $('#showFile').html(data);
       await node.stop();
     }
+
+
+
 
     $(document).ready(function () {
 
@@ -105,8 +125,8 @@
     $('#enableMetamask').click(function () {
       connect();
     });
-    $('#storeData').click(function () {
-      uploadFile();
+    $('#buscarCid').click(function () {
+      showFile();
     });
   </script>
 
